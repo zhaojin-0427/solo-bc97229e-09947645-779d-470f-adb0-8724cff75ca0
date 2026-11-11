@@ -6,9 +6,17 @@ services:
     container_name: sql-lineage-web
     ports:
       - "8000:8000"
+    environment:
+      # SQLite 持久化路径；命名卷确保容器重建/重启后映射和名单仍在
+      IDENTITY_DB_PATH: /app/data/identity.db
+    volumes:
+      - identity-data:/app/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/')"]
       interval: 15s
       timeout: 5s
       retries: 5
+
+volumes:
+  identity-data:

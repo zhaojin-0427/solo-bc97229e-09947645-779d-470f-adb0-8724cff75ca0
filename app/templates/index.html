@@ -8,10 +8,15 @@
 </head>
 <body>
 <header class="topbar">
+  <nav class="nav">
+    <a class="active" href="{{ url_for('index') }}">SQL 字段溯源</a>
+    <a href="{{ url_for('identity_page') }}">身份归并入仓 →</a>
+  </nav>
   <h1>SQL 字段溯源 · 敏感列影响分析</h1>
   <p class="subtitle">
     粘贴源表有序字段（字段名后加 <code>*</code> 标记敏感）与单条 SQLite SELECT，
     逐列展示源字段及经由的 CTE 列路径。只做静态溯源，不执行 SQL。
+    收到 CRM 合号通知后需要归并历史名单？请进入 <a class="inline-link" href="{{ url_for('identity_page') }}">身份归并入仓</a>。
   </p>
 </header>
 

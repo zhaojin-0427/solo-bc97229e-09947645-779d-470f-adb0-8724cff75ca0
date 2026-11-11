@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>身份归并入仓 · 合号迁移正式名单</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <nav class="nav">
+    <a href="{{ url_for('index') }}">SQL 字段溯源</a>
+    <a class="active" href="{{ url_for('identity_page') }}">身份归并入仓</a>
+  </nav>
+  <h1>身份归并入仓 · 合号迁移正式名单</h1>
+  <p class="subtitle">
+    收到 CRM 合号通知后，把同一人的历史名单归到保留客户号，避免重复投放。
+    上传 CRM 合号 CSV 会沿链迁移历史正式名单；分群 CSV 导入时也按当前链路归到最终客户号。
+    两种上传均整批生效，查询与下载看到的是归并前或归并后的完整快照。
+  </p>
+</header>
+
+<main class="identity-layout">
+  <section class="panel upload-panel">
+    <h2>1. 上传 CRM 合号 CSV</h2>
+    <p class="field-help">
+      每行：<code>旧号, 保留号</code>。旧号直接映射到保留号；链路会自动传递到最终客户号。
+    </p>
+    <label class="file-label">
+      <span>选择 CSV 文件（可选）</span>
+      <input type="file" id="merge-file" accept=".csv,text/csv">
+    </label>
+    <textarea id="merge-text" spellcheck="false" aria-label="合号 CSV 文本">{{ sample_merge }}</textarea>
+    <div class="actions">
+      <button id="merge-upload" type="button">上传合号映射</button>
+      <button id="merge-reset" class="secondary" type="button">恢复示例</button>
+      <a class="mini-link" href="/api/identity/sample/merges.csv">下载示例 CSV</a>
+    </div>
+    <p class="field-help">
+      选中文件时优先使用文件，否则使用文本框内容。同一旧号只能有一个直接去向；
+      同向重传不改变结果；改向或合并新旧映射后成环则整批拒绝。
+    </p>
+  </section>
+
+  <section class="panel upload-panel">
+    <h2>2. 上传分群系统 CSV</h2>
+    <p class="field-help">
+      每行：<code>客户号, 分群, 业务日</code>。导入时先按当前合号链归到最终客户号，
+      再按“最终客户号 + 分群 + 业务日”去重。
+    </p>
+    <label class="file-label">
+      <span>选择 CSV 文件（可选）</span>
+      <input type="file" id="segment-file" accept=".csv,text/csv">
+    </label>
+    <textarea id="segment-text" spellcheck="false" aria-label="分群 CSV 文本">{{ sample_segments }}</textarea>
+    <div class="actions">
+      <button id="segment-upload" type="button">导入分群名单</button>
+      <button id="segment-reset" class="secondary" type="button">恢复示例</button>
+      <a class="mini-link" href="/api/identity/sample/segments.csv">下载示例 CSV</a>
+    </div>
+    <p class="field-help">
+      支持 UTF-8/GBK、带或不带表头（中文或常见英文列名）；任一行缺列或空值会整批拒绝。
+    </p>
+  </section>
+
+  <section class="panel full" id="message-panel">
+    <div id="identity-status" class="status"></div>
+    <div id="identity-error" class="error-box" hidden></div>
+  </section>
+
+  <section class="panel full">
+    <div class="section-head">
+      <h2>数据概览</h2>
+      <span class="hint">概览、映射与名单来自同一个读取快照</span>
+    </div>
+    <div id="stat-grid" class="stat-grid"></div>
+  </section>
+
+  <section class="panel full">
+    <div class="section-head">
+      <h2>当前合号映射</h2>
+      <span id="merge-summary" class="hint"></span>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>旧号</th><th>直接保留号</th><th>最终客户号</th><th>传递链</th></tr>
+        </thead>
+        <tbody id="merge-table-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel full">
+    <div class="section-head">
+      <h2>正式名单</h2>
+      <div class="actions">
+        <span id="segment-summary" class="hint"></span>
+        <a id="download-link" class="button-link"
+           href="/api/identity/segments/download" download>下载完整 CSV</a>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>客户号（最终号）</th><th>分群</th><th>业务日</th></tr>
+        </thead>
+        <tbody id="segment-table-body"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <button id="prev-page" class="secondary" type="button">上一页</button>
+      <span id="page-info" class="hint"></span>
+      <button id="next-page" class="secondary" type="button">下一页</button>
+    </div>
+  </section>
+</main>
+
+<script>
+window.IDENTITY_SAMPLE_MERGE = {{ sample_merge | tojson }};
+window.IDENTITY_SAMPLE_SEGMENTS = {{ sample_segments | tojson }};
+</script>
+<script src="{{ url_for('static', filename='identity.js') }}"></script>
+</body>
+</html>
